@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumSec Chain - AI Forensic Analyst</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e0e6ed;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff, #7c3aed, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            color: #94a3b8;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.2);
+        }
+
+        .card h3 {
+            color: #00d4ff;
+            margin-bottom: 16px;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: rgba(0, 212, 255, 0.02);
+        }
+
+        .upload-zone:hover {
+            border-color: rgba(0, 212, 255, 0.6);
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .upload-zone.active {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .attack-timeline {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid #00d4ff;
+        }
+
+        .timeline-time {
+            font-size: 12px;
+            color: #64748b;
+            min-width: 80px;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-technique {
+            font-weight: 600;
+            color: #f59e0b;
+            margin-bottom: 4px;
+        }
+
+        .mitre-heatmap {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .mitre-cell {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .mitre-cell.detected {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+        }
+
+        .mitre-cell.high-confidence {
+            background: rgba(239, 68, 68, 0.4);
+            border-color: rgba(239, 68, 68, 0.8);
+        }
+
+        .chat-interface {
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px 8px 0 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0 0 8px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: none;
+        }
+
+        .chat-input input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #e0e6ed;
+            font-size: 14px;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .message {
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .message.user {
+            background: rgba(0, 212, 255, 0.1);
+            margin-left: 20%;
+        }
+
+        .message.ai {
+            background: rgba(124, 58, 237, 0.1);
+            margin-right: 20%;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .ioc-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .ioc-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ioc-item:last-child {
+            border-bottom: none;
+        }
+
+        .confidence-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .confidence-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .confidence-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .confidence-low {
+            background: rgba(156, 163, 175, 0.2);
+            color: #9ca3af;
+        }
+
+        .blockchain-proof {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .proof-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .hash {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            word-break: break-all;
+        }
+
+        .playbook-actions {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .action-item {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .action-title {
+            font-weight: 600;
+            color: #fbbf24;
+            margin-bottom: 4px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #00d4ff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .grid-full {
+            grid-column: 1 / -1;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>QuantumSec Chain</h1>
+            <p class="subtitle">AI-Powered Forensic Analysis with Blockchain Chain-of-Custody & Post-Quantum Cryptography</p>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <h3>📁 Log Ingestion</h3>
+                <div class="upload-zone" id="uploadZone">
+                    <div>
+                        <p>🚀 Drop log files here or click to upload</p>
+                        <p style="font-size: 12px; opacity: 0.7; margin-top: 8px;">Supports CSV, JSON, CEF, Syslog formats</p>
+                    </div>
+                    <input type="file" id="fileInput" style="display: none;" multiple>
+                </div>
+                <div id="uploadStatus" style="margin-top: 16px;"></div>
+                <button class="btn" id="startAnalysis" disabled>🔍 Start Analysis</button>
+            </div>
+
+            <div class="card">
+                <h3>🤖 AI Investigator Chat</h3>
+                <div class="chat-interface">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message ai">
+                            <div style="font-weight: 600; margin-bottom: 4px;">AI Investigator</div>
+                            Hello! I'm your AI forensic investigator. Upload some logs and I'll help you analyze potential security incidents. You can ask me questions like:
+                            <br>• "What was the initial access method?"
+                            <br>• "Show me lateral movement patterns"
+                            <br>• "What IOCs were detected?"
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="chatInput" placeholder="Ask me about the incident..." disabled>
+                        <button class="btn" id="sendChat" disabled>Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="analysis-grid" id="analysisSection" style="display: none;">
+            <div class="card">
+                <h3>📊 Analysis Progress</h3>
+                <div id="analysisProgress">
+                    <div class="status" id="statusDisplay">
+                        <div class="status-dot"></div>
+                        <span>Ready for analysis</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div id="currentStep">Waiting for logs...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🎯 MITRE ATT&CK Heatmap</h3>
+                <div class="mitre-heatmap" id="mitreHeatmap">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>⏱️ Attack Timeline</h3>
+                <div class="attack-timeline" id="attackTimeline">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔍 IOCs & Evidence</h3>
+                <div class="tabs">
+                    <div class="tab active" data-tab="iocs">IOCs</div>
+                    <div class="tab" data-tab="evidence">Evidence</div>
+                    <div class="tab" data-tab="blockchain">Blockchain</div>
+                </div>
+                
+                <div class="tab-content active" id="iocs">
+                    <div class="ioc-list" id="iocList">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="evidence">
+                    <div id="evidenceDetails">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="blockchain">
+                    <div class="blockchain-proof" id="blockchainProof">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🛡️ Remediation Playbooks</h3>
+                <div class="playbook-actions" id="playbookActions">
+                    <!-- Will be populated dynamically -->
+                </div>
+                <button class="btn" id="exportPlaybook" style="margin-top: 12px;">📋 Export YAML</button>
+            </div>
+
+            <div class="card">
+                <h3>📄 Generate Report</h3>
+                <div style="margin-bottom: 16px;">
+                    <p>Generate comprehensive forensic report with:</p>
+                    <ul style="margin: 8px 0 0 20px; font-size: 14px; opacity: 0.8;">
+                        <li>Attack stage identification</li>
+                        <li>MITRE ATT&CK mapping</li>
+                        <li>Timeline of events</li>
+                        <li>IOCs and evidence</li>
+                        <li>Blockchain proof of custody</li>
+                        <li>PQC signature verification</li>
+                    </ul>
+                </div>
+                <button class="btn" id="generateReport" disabled>📊 Generate Report</button>
+                <div id="reportStatus" style="margin-top: 12px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulated data and state management
+        class QuantumSecChain {
+            constructor() {
+                this.uploadedFiles = [];
+                this.analysisResults = null;
+                this.blockchainHashes = {};
+                this.isAnalyzing = false;
+                this.initEventListeners();
+                this.initMockData();
+            }
+
+            initEventListeners() {
+                const uploadZone = document.getElementById('uploadZone');
+                const fileInput = document.getElementById('fileInput');
+                const startAnalysis = document.getElementById('startAnalysis');
+                const chatInput = document.getElementById('chatInput');
+                const sendChat = document.getElementById('sendChat');
+                const generateReport = document.getElementById('generateReport');
+                const exportPlaybook = document.getElementById('exportPlaybook');
+
+                // File upload
+                uploadZone.addEventListener('click', () => fileInput.click());
+                uploadZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadZone.classList.add('active');
+                });
+                uploadZone.addEventListener('dragleave', () => {
+                    uploadZone.classList.remove('active');
+                });
+                uploadZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadZone.classList.remove('active');
+                    this.handleFiles(e.dataTransfer.files);
+                });
+
+                fileInput.addEventListener('change', (e) => {
+                    this.handleFiles(e.target.files);
+                });
+
+                startAnalysis.addEventListener('click', () => {
+                    this.startAnalysis();
+                });
+
+                // Chat
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.sendChatMessage();
+                    }
+                });
+                sendChat.addEventListener('click', () => {
+                    this.sendChatMessage();
+                });
+
+                // Tabs
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        this.switchTab(tab.dataset.tab);
+                    });
+                });
+
+                generateReport.addEventListener('click', () => {
+                    this.generateReport();
+                });
+
+                exportPlaybook.addEventListener('click', () => {
+                    this.exportPlaybook();
+                });
+            }
+
+            initMockData() {
+                this.mitreData = [
+                    { id: 'T1566', name: 'Phishing', tactic: 'Initial Access' },
+                    { id: 'T1059', name: 'Command and Scripting', tactic: 'Execution' },
+                    { id: 'T1055', name: 'Process Injection', tactic: 'Defense Evasion' },
+                    { id: 'T1003', name: 'Credential Dumping', tactic: 'Credential Access' },
+                    { id: 'T1021', name: 'Remote Services', tactic: 'Lateral Movement' },
+                    { id: 'T1071', name: 'Application Layer Protocol', tactic: 'Command and Control' },
+                    { id: 'T1041', name: 'Exfiltration Over C2', tactic: 'Exfiltration' }
+                ];
+
+                this.mockAnalysis = {
+                    timeline: [
+                        { time: '09:14:23', technique: 'T1566.001 - Spearphishing Attachment', description: 'Malicious email attachment opened', confidence: 'high' },
+                        { time: '09:15:45', technique: 'T1059.001 - PowerShell', description: 'PowerShell execution detected', confidence: 'high' },
+                        { time: '09:16:12', technique: 'T1055.012 - Process Hollowing', description: 'Process injection into legitimate process', confidence: 'medium' },
+                        { time: '09:18:34', technique: 'T1003.001 - LSASS Memory', description: 'Credential dumping attempt', confidence: 'high' },
+                        { time: '09:22:15', technique: 'T1021.002 - SMB/Windows Admin Shares', description: 'Lateral movement via SMB', confidence: 'high' },
+                        { time: '09:25:48', technique: 'T1071.001 - Web Protocols', description: 'C2 communication established', confidence: 'medium' }
+                    ],
+                    iocs: [
+                        { type: 'Domain', value: 'malicious-c2.example.com', confidence: 'high' },
+                        { type: 'IP', value: '192.168.1.100', confidence: 'high' },
+                        { type: 'Hash', value: 'e3b0c44298fc1c149afbf4c8996fb924', confidence: 'medium' },
+                        { type: 'File', value: 'invoice.exe', confidence: 'high' },
+                        { type: 'Process', value: 'powershell.exe', confidence: 'low' }
+                    ],
+                    detectedTechniques: ['T1566', 'T1059', 'T1055', 'T1003', 'T1021', 'T1071'],
+                    playbooks: [
+                        { action: 'Isolate affected hosts', description: 'Quarantine systems showing IOCs', impact: 'Medium' },
+                        { action: 'Reset compromised credentials', description: 'Force password reset for affected accounts', impact: 'High' },
+                        { action: 'Block malicious domains', description: 'Add IOCs to firewall blacklist', impact: 'Low' },
+                        { action: 'Deploy YARA rules', description: 'Deploy detection rules for identified malware', impact: 'Low' }
+                    ]
+                };
+            }
+
+            handleFiles(files) {
+                this.uploadedFiles = Array.from(files);
+                const uploadStatus = document.getElementById('uploadStatus');
+                const startAnalysis = document.getElementById('startAnalysis');
+
+                if (files.length > 0) {
+                    uploadStatus.innerHTML = `
+                        <div class="status">
+                            <div class="status-dot" style="background: #10b981;"></div>
+                            <span>${files.length} file(s) uploaded successfully</span>
+                        </div>
+                        <div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">
+                            ${Array.from(files).map(f => f.name).join(', ')}
+                        </div>
+                    `;
+                    startAnalysis.disabled = false;
+
+                    // Generate blockchain hashes for uploaded files
+                    Array.from(files).forEach(file => {
+                        const hash = CryptoJS.SHA3(file.name + file.size + Date.now()).toString();
+                        this.blockchainHashes[file.name] = {
+                            hash: hash,
+                            timestamp: new Date().toISOString(),
+                            size: file.size,
+                            txId: 'tx_' + Math.random().toString(36).substr(2, 9)
+                        };
+                    });
+                }
+            }
+
+            async startAnalysis() {
+                if (this.isAnalyzing) return;
+
+                this.isAnalyzing = true;
+                const analysisSection = document.getElementById('analysisSection');
+                const startButton = document.getElementById('startAnalysis');
+                const chatInput = document.getElementById('chatInput');
+                const sendChat = document.getElementById('sendChat');
+                
+                analysisSection.style.display = 'grid';
+                startButton.disabled = true;
+                
+                // Enable chat after analysis starts
+                setTimeout(() => {
+                    chatInput.disabled = false;
+                    sendChat.disabled = false;
+                }, 2000);
+
+                const steps = [
+                    'Normalizing log formats...',
+                    'Parsing events and entities...',
+                    'Detecting anomalies...',
+                    'Mapping to MITRE ATT&CK...',
+                    'Building attack timeline...',
+                    'Generating IOCs...',
+                    'Creating blockchain proofs...',
+                    'Analysis complete!'
+                ];
+
+                for (let i = 0; i < steps.length; i++) {
+                    await this.updateProgress(steps[i], (i + 1) / steps.length * 100);
+                    await this.sleep(1000 + Math.random() * 1000);
+                }
+
+                this.analysisResults = this.mockAnalysis;
+                this.updateUI();
+                this.isAnalyzing = false;
+                
+                document.getElementById('generateReport').disabled = false;
+                
+                // Add completion message to chat
+                this.addChatMessage('ai', 'Analysis complete! I found evidence of a multi-stage attack. Ask me anything about the incident.');
+            }
+
+            async updateProgress(step, percentage) {
+                const statusDisplay = document.getElementById('statusDisplay');
+                const progressFill = document.getElementById('progressFill');
+                const currentStep = document.getElementById('currentStep');
+
+                statusDisplay.innerHTML = `
+                    <div class="status-dot"></div>
+                    <span>Analyzing...</span>
+                `;
+                progressFill.style.width = percentage + '%';
+                currentStep.textContent = step;
+            }
+
+            updateUI() {
+                this.updateMitreHeatmap();
+                this.updateTimeline();
+                this.updateIOCs();
+                this.updateEvidence();
+                this.updateBlockchainProof();
+                this.updatePlaybooks();
+            }
+
+            updateMitreHeatmap() {
+                const heatmap = document.getElementById('mitreHeatmap');
+                const detected = this.analysisResults.detectedTechniques;
+
+                heatmap.innerHTML = this.mitreData.map(technique => {
+                    const isDetected = detected.includes(technique.id);
+                    const confidence = isDetected ? (Math.random() > 0.5 ? 'high-confidence' : 'detected') : '';
+                    
+                    return `
+                        <div class="mitre-cell ${confidence}" title="${technique.name}">
+                            <div style="font-weight: 600;">${technique.id}</div>
+                            <div style="font-size: 10px; opacity: 0.8;">${technique.tactic}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            updateTimeline() {
+                const timeline = document.getElementById('attackTimeline');
+                timeline.innerHTML = this.analysisResults.timeline.map(event => `
+                    <div class="timeline-item">
+                        <div class="timeline-time">${event.time}</div>
+                        <div class="timeline-content">
+                            <div class="timeline-technique">${event.technique}</div>
+                            <div style="font-size: 14px; opacity: 0.9;">${event.description}</div>
+                            <div style="margin-top: 4px;">
+                                <span class="confidence-badge confidence-${event.confidence}">${event.confidence.toUpperCase()}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            updateIOCs() {
+                const iocList = document.getElementById('iocList');
+                iocList.innerHTML = this.analysisResults.iocs.map(ioc => `
+                    <div class="ioc-item">
+                        <div>
+                            <div style="font-weight: 600;">${ioc.type}</div>
+                            <div style="font-size: 12px; opacity: 0.8; font-family: monospace;">${ioc.value}</div>
+                        </div>
+                        <span class="confidence-badge confidence-${ioc.confidence}">${ioc.confidence.toUpperCase()}</span>
+                    </div>
+                `).join('');
+            }
+
+            updateEvidence() {
+                const evidenceDetails = document.getElementById('evidenceDetails');
+                evidenceDetails.innerHTML = `
+                    <div style="margin-bottom: 16px;">
+                        <h4 style="color: #00d4ff; margin-bottom: 8px;">XAI Evidence Chain</h4>
+                        <div style="background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">T1566.001 - Spearphishing Attachment</div>
+                            <div style="font-size: 12px; opacity: 0.8;">Evidence: email.log:1247, process_creation.log:89</div>
+                            <div style="font-size: 12px; color: #10b981; margin-top: 4px;">Confidence: 94% (Email attachment + Process execution pattern)</div>
+                        </div>
+                        <div style="background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">T1059.001 - PowerShell</div>
+                            <div style="font-size: 12px; opacity: 0.8;">Evidence: powershell.log:34-67, cmdline.log:156</div>
+                            <div style="font-size: 12px; color: #f59e0b; margin-top: 4px;">Confidence: 87% (Encoded command execution detected)</div>
+                        </div>
+                        <div style="background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 6px;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">T1003.001 - LSASS Memory</div>
+                            <div style="font-size: 12px; opacity: 0.8;">Evidence: security.log:445, process_access.log:23</div>
+                            <div style="font-size: 12px; color: #ef4444; margin-top: 4px;">Confidence: 96% (Direct LSASS access + Memory dump signatures)</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            updateBlockchainProof() {
+                const blockchainProof = document.getElementById('blockchainProof');
+                const sampleHash = Object.values(this.blockchainHashes)[0];
+                
+                blockchainProof.innerHTML = `
+                    <div style="margin-bottom: 16px;">
+                        <h4 style="color: #10b981; margin-bottom: 8px;">🔗 Chain-of-Custody Verification</h4>
+                        <div class="proof-item">
+                            <span>Status:</span>
+                            <span style="color: #10b981; font-weight: 600;">✓ VERIFIED</span>
+                        </div>
+                        <div class="proof-item">
+                            <span>Blockchain:</span>
+                            <span>Hyperledger Fabric (Dev Network)</span>
+                        </div>
+                        <div class="proof-item">
+                            <span>Block Height:</span>
+                            <span>#${Math.floor(Math.random() * 10000) + 1000}</span>
+                        </div>
+                        <div class="proof-item">
+                            <span>Transaction ID:</span>
+                            <span class="hash">${sampleHash ? sampleHash.txId : 'tx_demo123'}</span>
+                        </div>
+                        <div class="proof-item">
+                            <span>Evidence Hash:</span>
+                            <span class="hash">${sampleHash ? sampleHash.hash.substring(0, 32) + '...' : 'demo_hash...'}</span>
+                        </div>
+                        <div class="proof-item">
+                            <span>PQC Signature:</span>
+                            <span style="color: #10b981;">✓ CRYSTALS-Dilithium Valid</span>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="app.verifyOnChain()" style="width: 100%;">🔍 Verify on Blockchain</button>
+                `;
+            }
+
+            updatePlaybooks() {
+                const playbookActions = document.getElementById('playbookActions');
+                playbookActions.innerHTML = this.analysisResults.playbooks.map(playbook => `
+                    <div class="action-item">
+                        <div class="action-title">${playbook.action}</div>
+                        <div style="font-size: 12px; opacity: 0.8; margin-bottom: 4px;">${playbook.description}</div>
+                        <div style="font-size: 12px;">
+                            <span style="color: #f59e0b;">Impact: ${playbook.impact}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            switchTab(tabName) {
+                // Update tab buttons
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+                // Update tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabName).classList.add('active');
+            }
+
+            sendChatMessage() {
+                const chatInput = document.getElementById('chatInput');
+                const message = chatInput.value.trim();
+                
+                if (message) {
+                    this.addChatMessage('user', message);
+                    chatInput.value = '';
+                    
+                    // Simulate AI response
+                    setTimeout(() => {
+                        const response = this.generateAIResponse(message);
+                        this.addChatMessage('ai', response);
+                    }, 1000 + Math.random() * 2000);
+                }
+            }
+
+            addChatMessage(sender, message) {
+                const chatMessages = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+                
+                if (sender === 'ai') {
+                    messageDiv.innerHTML = `
+                        <div style="font-weight: 600; margin-bottom: 4px;">AI Investigator</div>
+                        ${message}
+                    `;
+                } else {
+                    messageDiv.innerHTML = `
+                        <div style="font-weight: 600; margin-bottom: 4px;">You</div>
+                        ${message}
+                    `;
+                }
+                
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            generateAIResponse(question) {
+                const lowerQ = question.toLowerCase();
+                
+                if (lowerQ.includes('initial access') || lowerQ.includes('how') && lowerQ.includes('start')) {
+                    return `Based on the analysis, the initial access was achieved through <strong>T1566.001 - Spearphishing Attachment</strong> at 09:14:23. The attacker sent a malicious email attachment that was opened by the user. Evidence shows this in email.log:1247 with 94% confidence. The attachment executed PowerShell commands to establish persistence.`;
+                }
+                
+                if (lowerQ.includes('lateral movement') || lowerQ.includes('spread')) {
+                    return `The attacker used <strong>T1021.002 - SMB/Windows Admin Shares</strong> for lateral movement at 09:22:15. After credential dumping (T1003.001), they leveraged the stolen credentials to access remote systems via SMB. High confidence detection based on authentication logs and network traffic patterns.`;
+                }
+                
+                if (lowerQ.includes('ioc') || lowerQ.includes('indicator')) {
+                    return `Key IOCs identified include:<br/>
+                    🔴 <strong>Domain:</strong> malicious-c2.example.com (High confidence)<br/>
+                    🔴 <strong>IP:</strong> 192.168.1.100 (High confidence)<br/>
+                    🟡 <strong>File:</strong> invoice.exe (High confidence)<br/>
+                    🟡 <strong>Hash:</strong> e3b0c44298fc1c149afbf4c8996fb924 (Medium confidence)<br/>
+                    All IOCs are recorded on blockchain with cryptographic proof.`;
+                }
+                
+                if (lowerQ.includes('credential') || lowerQ.includes('password')) {
+                    return `Credential compromise detected via <strong>T1003.001 - LSASS Memory</strong> at 09:18:34. The attacker directly accessed LSASS memory to extract credentials. 96% confidence based on process access logs and memory dump signatures. Recommend immediate password reset for all affected accounts.`;
+                }
+                
+                if (lowerQ.includes('timeline') || lowerQ.includes('sequence')) {
+                    return `Attack progression:<br/>
+                    1️⃣ <strong>09:14:23</strong> - Initial access via phishing<br/>
+                    2️⃣ <strong>09:15:45</strong> - PowerShell execution<br/>
+                    3️⃣ <strong>09:16:12</strong> - Process injection for persistence<br/>
+                    4️⃣ <strong>09:18:34</strong> - Credential dumping<br/>
+                    5️⃣ <strong>09:22:15</strong> - Lateral movement via SMB<br/>
+                    6️⃣ <strong>09:25:48</strong> - C2 communication established`;
+                }
+                
+                if (lowerQ.includes('remediation') || lowerQ.includes('fix') || lowerQ.includes('stop')) {
+                    return `Recommended immediate actions:<br/>
+                    🚨 <strong>Isolate affected hosts</strong> - Quarantine systems showing IOCs<br/>
+                    🔑 <strong>Reset compromised credentials</strong> - Force password reset<br/>
+                    🛡️ <strong>Block malicious domains</strong> - Add to firewall blacklist<br/>
+                    📋 <strong>Deploy YARA rules</strong> - For ongoing detection<br/>
+                    All actions available as exportable YAML playbook.`;
+                }
+                
+                return `I can help you understand this security incident. The analysis detected a multi-stage attack with ${this.analysisResults.detectedTechniques.length} MITRE ATT&CK techniques. You can ask me about:
+                <br/>• Initial access methods
+                <br/>• Lateral movement patterns  
+                <br/>• IOCs and evidence
+                <br/>• Timeline of events
+                <br/>• Remediation steps`;
+            }
+
+            async generateReport() {
+                const generateButton = document.getElementById('generateReport');
+                const reportStatus = document.getElementById('reportStatus');
+                
+                generateButton.disabled = true;
+                reportStatus.innerHTML = '<div class="loading"></div> Generating comprehensive report...';
+                
+                await this.sleep(2000);
+                
+                // Simulate report generation
+                const reportData = this.createReportData();
+                const reportBlob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+                const reportUrl = URL.createObjectURL(reportBlob);
+                
+                // Generate PQC signature simulation
+                const signature = this.generatePQCSignature(reportData);
+                
+                reportStatus.innerHTML = `
+                    <div style="color: #10b981; margin-bottom: 8px;">✓ Report generated successfully</div>
+                    <div style="font-size: 12px; opacity: 0.8; margin-bottom: 8px;">
+                        PQC Signature: ${signature.substring(0, 32)}...
+                    </div>
+                    <a href="${reportUrl}" download="forensic-report-${Date.now()}.json" class="btn" style="display: inline-block; text-decoration: none; margin-right: 8px;">📊 Download JSON</a>
+                    <button class="btn" onclick="app.generatePDFReport()">📄 View PDF Preview</button>
+                `;
+                
+                generateButton.disabled = false;
+            }
+
+            createReportData() {
+                return {
+                    metadata: {
+                        title: "QuantumSec Chain Forensic Analysis Report",
+                        generated: new Date().toISOString(),
+                        analyst: "AI Investigator",
+                        caseId: `QSC-${Date.now()}`,
+                        version: "1.0"
+                    },
+                    executiveSummary: {
+                        incidentType: "Multi-stage Cyber Attack",
+                        severity: "High",
+                        impactedAssets: this.uploadedFiles.length,
+                        detectedTechniques: this.analysisResults.detectedTechniques.length,
+                        confidence: "High"
+                    },
+                    attackStages: [
+                        "Initial Access via Spearphishing",
+                        "Execution through PowerShell",
+                        "Defense Evasion via Process Injection",
+                        "Credential Access through LSASS Dumping",
+                        "Lateral Movement via SMB",
+                        "Command & Control Establishment"
+                    ],
+                    mitreMapping: this.analysisResults.detectedTechniques.map(techId => {
+                        const tech = this.mitreData.find(t => t.id === techId);
+                        return {
+                            id: techId,
+                            name: tech ? tech.name : 'Unknown',
+                            tactic: tech ? tech.tactic : 'Unknown',
+                            confidence: Math.random() > 0.5 ? 'High' : 'Medium'
+                        };
+                    }),
+                    timeline: this.analysisResults.timeline,
+                    iocs: this.analysisResults.iocs,
+                    remediationActions: this.analysisResults.playbooks,
+                    blockchainEvidence: this.blockchainHashes,
+                    xaiExplanation: {
+                        primaryEvidence: "Email attachment execution followed by PowerShell activity",
+                        confidenceFactors: ["Process tree analysis", "Command line patterns", "Network connections"],
+                        alternativeHypotheses: ["False positive due to legitimate admin activity - Low probability"]
+                    }
+                };
+            }
+
+            generatePQCSignature(data) {
+                // Simulate CRYSTALS-Dilithium signature
+                const dataString = JSON.stringify(data);
+                const hash = CryptoJS.SHA3(dataString).toString();
+                return `DILITHIUM_${hash}`;
+            }
+
+            generatePDFReport() {
+                // Create a simple HTML report preview
+                const reportWindow = window.open('', '_blank');
+                const reportData = this.createReportData();
+                
+                reportWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Forensic Analysis Report</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+                            .header { background: linear-gradient(135deg, #00d4ff, #7c3aed); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+                            .section { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                            .technique { background: #f8f9fa; padding: 10px; margin: 5px 0; border-left: 3px solid #00d4ff; }
+                            .ioc { font-family: monospace; background: #f1f3f4; padding: 4px 8px; border-radius: 4px; }
+                            table { width: 100%; border-collapse: collapse; }
+                            th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+                            th { background: #f8f9fa; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>QuantumSec Chain Forensic Analysis Report</h1>
+                            <p>Case ID: ${reportData.metadata.caseId} | Generated: ${new Date().toLocaleString()}</p>
+                        </div>
+                        
+                        <div class="section">
+                            <h2>Executive Summary</h2>
+                            <p><strong>Incident Type:</strong> ${reportData.executiveSummary.incidentType}</p>
+                            <p><strong>Severity:</strong> ${reportData.executiveSummary.severity}</p>
+                            <p><strong>Detected Techniques:</strong> ${reportData.executiveSummary.detectedTechniques}</p>
+                        </div>
+
+                        <div class="section">
+                            <h2>MITRE ATT&CK Techniques</h2>
+                            ${reportData.mitreMapping.map(tech => `
+                                <div class="technique">
+                                    <strong>${tech.id}</strong> - ${tech.name} (${tech.tactic})
+                                    <br><small>Confidence: ${tech.confidence}</small>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="section">
+                            <h2>Timeline of Events</h2>
+                            <table>
+                                <tr><th>Time</th><th>Technique</th><th>Description</th><th>Confidence</th></tr>
+                                ${reportData.timeline.map(event => `
+                                    <tr>
+                                        <td>${event.time}</td>
+                                        <td>${event.technique}</td>
+                                        <td>${event.description}</td>
+                                        <td>${event.confidence.toUpperCase()}</td>
+                                    </tr>
+                                `).join('')}
+                            </table>
+                        </div>
+
+                        <div class="section">
+                            <h2>Indicators of Compromise (IOCs)</h2>
+                            ${reportData.iocs.map(ioc => `
+                                <p><strong>${ioc.type}:</strong> <span class="ioc">${ioc.value}</span> (${ioc.confidence.toUpperCase()})</p>
+                            `).join('')}
+                        </div>
+
+                        <div class="section">
+                            <h2>Blockchain Verification</h2>
+                            <p><strong>Status:</strong> ✓ All evidence cryptographically verified</p>
+                            <p><strong>PQC Signature:</strong> Valid CRYSTALS-Dilithium signature</p>
+                            <p><strong>Chain-of-Custody:</strong> Maintained via Hyperledger Fabric</p>
+                        </div>
+
+                        <div class="section">
+                            <h2>Recommended Actions</h2>
+                            ${reportData.remediationActions.map((action, i) => `
+                                <p><strong>${i + 1}. ${action.action}</strong><br>
+                                ${action.description} (Impact: ${action.impact})</p>
+                            `).join('')}
+                        </div>
+                    </body>
+                    </html>
+                `);
+                reportWindow.document.close();
+            }
+
+            exportPlaybook() {
+                const playbook = {
+                    version: '1.0',
+                    metadata: {
+                        name: 'QuantumSec Chain Remediation Playbook',
+                        generated: new Date().toISOString(),
+                        incident_id: `QSC-${Date.now()}`
+                    },
+                    actions: this.analysisResults.playbooks.map((action, i) => ({
+                        id: `action_${i + 1}`,
+                        name: action.action,
+                        description: action.description,
+                        type: 'remediation',
+                        impact: action.impact.toLowerCase(),
+                        automated: false,
+                        prerequisites: [],
+                        steps: [
+                            {
+                                step: 1,
+                                action: action.description,
+                                expected_result: 'Action completed successfully'
+                            }
+                        ]
+                    }))
+                };
+
+                const yamlContent = this.objectToYAML(playbook);
+                const blob = new Blob([yamlContent], { type: 'text/yaml' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `remediation-playbook-${Date.now()}.yaml`;
+                a.click();
+                
+                URL.revokeObjectURL(url);
+            }
+
+            objectToYAML(obj, indent = 0) {
+                const spaces = '  '.repeat(indent);
+                let yaml = '';
+                
+                for (const [key, value] of Object.entries(obj)) {
+                    if (value === null || value === undefined) {
+                        yaml += `${spaces}${key}: null\n`;
+                    } else if (typeof value === 'object' && !Array.isArray(value)) {
+                        yaml += `${spaces}${key}:\n`;
+                        yaml += this.objectToYAML(value, indent + 1);
+                    } else if (Array.isArray(value)) {
+                        yaml += `${spaces}${key}:\n`;
+                        value.forEach(item => {
+                            if (typeof item === 'object') {
+                                yaml += `${spaces}- \n`;
+                                yaml += this.objectToYAML(item, indent + 1).replace(/^  /, '    ');
+                            } else {
+                                yaml += `${spaces}- ${item}\n`;
+                            }
+                        });
+                    } else {
+                        const stringValue = typeof value === 'string' && value.includes('\n') ? 
+                            `|\n${value.split('\n').map(line => `${spaces}  ${line}`).join('\n')}` : 
+                            value;
+                        yaml += `${spaces}${key}: ${stringValue}\n`;
+                    }
+                }
+                
+                return yaml;
+            }
+
+            verifyOnChain() {
+                alert(`🔗 Blockchain Verification Result:
+
+✅ Transaction Status: CONFIRMED
+✅ Block Confirmations: 12/12
+✅ Merkle Proof: VALID
+✅ PQC Signature: CRYSTALS-Dilithium VERIFIED
+✅ Chain-of-Custody: INTACT
+
+Evidence integrity cryptographically guaranteed.
+Timestamp: ${new Date().toLocaleString()}
+Network: Hyperledger Fabric Dev Network`);
+            }
+
+            sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        // Initialize the application
+        const app = new QuantumSecChain();
